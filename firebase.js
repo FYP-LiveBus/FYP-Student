@@ -1,16 +1,30 @@
-import *  as firebase from 'firebase';
-import 'firebase/firestore';
+import * as firebase from 'firebase'
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyABJO-VB0d7TtNx8mSuR80vW1fEOENra0s",
-  authDomain: "livebus-b1608.firebaseapp.com",
-  databaseURL: "https://livebus-b1608.firebaseio.com",
-  projectId: "livebus-b1608",
-  storageBucket: "livebus-b1608.appspot.com",
-  messagingSenderId: "501963638178",
-  appId: "1:501963638178:web:5d99f770a8f0b0ff1e5efb"
+  apiKey: "AIzaSyAWhS5Yk3Vas6mzRAbcqLnIN3PWW1Nb4kU",
+  authDomain: "livebus-088091160.firebaseapp.com",
+  databaseURL: "https://livebus-088091160.firebaseio.com",
+  projectId: "livebus-088091160",
+  storageBucket: "livebus-088091160.appspot.com",
+  messagingSenderId: "23237595283",
+  appId: "1:23237595283:web:bd907f8756c73cd3a17d66",
+  measurementId: "G-303C0HRRFK"
 };
-  // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
 
+if(!firebase.apps.length){
+  firebase.initializeApp(firebaseConfig);   // Initialize Firebase
+}
+
+export function writeUserData(location) {
+  const db = firebase.database().ref('Drivers')
+  db.child("1234567789").child("StartingPosition").set({
+    "ABC": "Testing Pos"
+  })
+  db.child("1234567789").child("Current").set({
+    location
+  });
+  db.child("1234567789").child("FinalPosition").set({
+    "XYZ": "Testing Pos"
+  })
+}
 

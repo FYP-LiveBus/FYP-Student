@@ -1,21 +1,15 @@
-import React, { useState, useEffect, Component }  from 'react'
-import MapView, { Marker } from 'react-native-maps'
-import { AppRegistry, Text, View, StyleSheet, Dimensions } from 'react-native'
+import React, { useState, useEffect }  from 'react'
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
+import { StyleSheet, Dimensions } from 'react-native'
 import * as Location from 'expo-location';
-import * as Permissions from 'expo-permissions';
-import MapViewDirections from "react-native-maps-directions";
-// // import {PermissionsAndroid} from 'react-native';
-// import * as firebase from 'firebase';
-// import { firebaseConfig } from "src/firebase";
+import { writeUserData} from "../../firebase";
 
-// firebase.initializeApp(firebaseConfig)
-
-const height = Dimensions.get('window').height
+const height = Dimensions.get('window').height;
 const Map = () => {
   
   const [location, setLocation] = useState({latitude: 0, longitude: 0});
   const [errorMsg, setErrorMsg] = useState(null);
-
+  
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestPermissionsAsync();
@@ -24,25 +18,27 @@ const Map = () => {
         seterror({ error: "Permission not Granted" });
       }
 
-      Location.watchPositionAsync({timeInterval: 5000}, locs => {
-        setLocation({latitude: locs.coords.latitude, longitude: locs.coords.longitude});
-        console.log(locs);
-        console.warn(locs)
-      });
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation({latitude: location.coords.latitude, longitude: location.coords.longitude});
+
+      // Location.watchPositionAsync(
+      // {
+      //   // accuracy: Location.Accuracy.BestForNavigation, 
+      //   // distanceInterval: 1,
+      //   timeInterval: 5000
+      // }, (locs) => {
+      //   setLocation({latitude: locs.coords.latitude, longitude: locs.coords.longitude});
+      //   console.log(locs);
+      //   console.warn(locs)
+      //   writeUserData(locs)
+      // });
+
     })();   // async
   }, []);   // useEffect
 
-  let text = 'Waiting..';
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
-  }
   return (
-
     <MapView
       style={styles.map}
-      ref={(ref) => (mapView = ref)} ///
       loadingEnabled={true}
       provider={PROVIDER_GOOGLE}
       showsUserLocation={true}
@@ -53,13 +49,12 @@ const Map = () => {
         longitudeDelta: 0.0121
       }}
     >
-      <Marker 
+      {/* <Marker 
         coordinate={{
           latitude: location.latitude,
           longitude: location.longitude,
         }}
-        // title="Your location"
-      />
+      /> */}
 
     </MapView>
     )
@@ -74,13 +69,7 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Map
-
-
-
-
-
-
+export default Map;
 
 
 // https://lucianasato.eti.br/react-native/build-a-react-native-app-using-expo-installation-navigation-tabs-google-maps-part-1

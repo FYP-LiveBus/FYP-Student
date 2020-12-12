@@ -5,10 +5,11 @@ import { createBottomTabNavigator } from 'react-navigation-tabs'
 import MapScreen from './src/screens/MapScreen'
 import MapListScreen from './src/screens/MapListScreen'
 import { setNavigator } from './src/navigationRef'
-
+import HomeScreen from './src/screens/HomeScreen';
 
 const switchNavigator = createSwitchNavigator({
   mainFlow: createBottomTabNavigator({
+    Home: HomeScreen,
     MapView: MapScreen,
     MapList: MapListScreen
   })

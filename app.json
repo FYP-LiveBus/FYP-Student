@@ -19,13 +19,14 @@
     "ios": {
       "supportsTablet": true,
       "config": {
-        "googleMapsApiKey": "AIzaSyAI7fdb3cSLp4-TbhZsonR3Gflc8TSUXs4",
+        "googleMapsApiKey": "AIzaSyAI7fdb3cSLp4-TbhZsonR3Gflc8TSUXs4"
       },
       "infoPlist": {
         "UIBackgroundModes": [
          "location",
          "fetch"
-        ] 
+        ],
+        "NSLocationWhenInUseUsageDescription": "Switch on the location babu?"
       }
     },
     "android": {
