@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "driverapp",
-    "slug": "driverapp",
+    "name": "studentapp",
+    "slug": "studentapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
