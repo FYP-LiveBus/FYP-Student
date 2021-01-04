@@ -69,7 +69,7 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
           }
           var loc = firebase
             .database()
-            .ref(`Drivers/5fe8741247ca640017e36244`)
+            .ref(`Drivers/`)
             .on("value", (snapshot) => {
               // console.log(snapshot.val())
               const latitude = snapshot.val().CurrentPosition.location.coords
