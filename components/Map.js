@@ -9,24 +9,31 @@ import {
   Alert,
 } from "react-native";
 import * as Location from "expo-location";
-// import firebaseConfig  from "../firebase";
-import firebase from "firebase";
-import firebaseConfig from "../firebase";
 import { Button } from "react-native-paper";
 import FeedbackScreen from "../screens/FeedbackScreen";
+import axios from "axios";
+import * as firebase from "firebase";
+import "firebase/firestore";
+import firebaseConfig from "../firebase";
 
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 
-const height = Dimensions.get("window").height;
-
-const Map = ({ isBookRide, setIsBookRide, navigation }) => {
+const Map = ({
+  isBookRide,
+  setIsBookRide,
+  user,
+  selectedRoute,
+  selectedStop,
+  navigation,
+}) => {
   const [location, setLocation] = useState({});
+
   const [driverLocation, setDriverLocation] = useState({
     latitude: 0,
     longitude: 0,
   });
 
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [seats, setSeats] = useState(0);
 
   // users location
   useEffect(() => {
@@ -36,7 +43,6 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
         console.log("PERMSSION NOT GRANTED");
         seterror({ error: "Permission not Granted" });
       }
-
       // let location = await Location.getCurrentPositionAsync({});
       // setLocation({latitude: location.coords.latitude, longitude: location.coords.longitude});
 
@@ -48,8 +54,8 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
         },
         (locs) => {
           setLocation(locs);
-          console.log(locs);
-          console.warn(locs);
+          // console.log(locs);
+          // console.warn(locs);
           // currentWriteUserData(locs)
         }
       );
@@ -58,7 +64,7 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
 
   // // drivers location
   useEffect(() => {
-    if (isBookRide) {
+    if (!isBookRide) {
     } else {
       setTimeout(async () => {
         try {
@@ -67,9 +73,9 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
           } else {
             firebase.app(); // if already initialized, use that one
           }
-          var loc = firebase
+          firebase
             .database()
-            .ref(`Drivers/`)
+            .ref(`Drivers/` + selectedRoute.driverID)
             .on("value", (snapshot) => {
               // console.log(snapshot.val())
               const latitude = snapshot.val().CurrentPosition.location.coords
@@ -80,18 +86,51 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
               console.log("Location: " + latitude + ", " + longitude);
             });
         } catch (e) {
+          console.log(e);
           alert(e + " Check Map Alert");
         }
       }, 3000);
     }
   });
 
-  _stopGetLocationAsync = async () => {
+  const _stopGetLocationAsync = async () => {
     const location = await Location.watchPositionAsync();
     return location.remove();
   };
 
-  const _checkOut = async () => {
+  const _checkOut = () => {
+    axios
+      .post(`https://livebusapi.herokuapp.com/api/student/trips`, {
+        stdUsername: user.username,
+        email: user.email,
+        routeNo: selectedRoute.routeNo,
+        stopName: selectedStop,
+        driver: selectedRoute.driver,
+        date: formatDate(Date.now()),
+      })
+      .then((response) => {
+        console.log(response.data);
+        _stopGetLocationAsync();
+        setIsBookRide(false);
+      })
+      .catch((e) => {
+        alert(e);
+      });
+  };
+
+  const formatDate = (date) => {
+    var d = new Date(date),
+      month = "" + (d.getMonth() + 1),
+      day = "" + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2) month = "0" + month;
+    if (day.length < 2) day = "0" + day;
+
+    return [year, month, day].join("-");
+  };
+
+  const tripCompletedHandler = () => {
     Alert.alert(
       "Alert Title",
       "Are you sure?",
@@ -105,9 +144,16 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
           text: "Yes",
           onPress: () => {
             try {
-              _stopGetLocationAsync();
-              setIsBookRide(false);
-              navigation.navigate("FeedbackScreen");
+              isBookRide = true;
+              if (isBookRide) {
+                navigation.navigate("FeedbackScreen");
+                // checkSeats();
+                updateSeats();
+                _checkOut();
+              } else {
+                Alert.alert("Can't End Ride", "Start your ride first...");
+                console.warn(isBookRide);
+              }
             } catch (e) {
               Alert.alert("IN CATCH", "CHECK CATCH");
             }
@@ -117,6 +163,31 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
       { cancelable: false }
     );
   };
+
+  const updateSeats = async () => {
+    const no = await firebase
+      .firestore()
+      .collection("Bus")
+      .doc(selectedRoute.busNo)
+      .get();
+    // setSeats(no.data().seats);
+    let updatedseats = no.data().seats + 1;
+
+    const no1 = await firebase
+      .firestore()
+      .collection("Bus")
+      .doc(selectedRoute.busNo)
+      .update({ seats: +updatedseats });
+  };
+
+  // const updateSeats = async (n) => {
+  //   const s = n + 1;
+  //   const no = await firebase
+  //     .firestore()
+  //     .collection("Bus")
+  //     .doc(selectedRoute.busNo)
+  //     .update({ seats: +s });
+  // };
 
   return (
     <View>
@@ -146,7 +217,7 @@ const Map = ({ isBookRide, setIsBookRide, navigation }) => {
           color={Platform.OS === "android" ? "red" : "red"}
           mode="contained"
           style={styles.btn}
-          onPress={() => _checkOut()}
+          onPress={() => tripCompletedHandler()}
         >
           <Text>End Ride</Text>
         </Button>

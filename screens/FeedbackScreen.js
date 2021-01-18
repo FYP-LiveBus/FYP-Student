@@ -8,6 +8,18 @@ const FeedbackScreen = ({ navigation }) => {
 
   const [rating, setRating] = React.useState("");
 
+  const formatDate = (date) => {
+    var d = new Date(date),
+      month = "" + (d.getMonth() + 1),
+      day = "" + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2) month = "0" + month;
+    if (day.length < 2) day = "0" + day;
+
+    return [year, month, day].join("-");
+  };
+
   const submitFeedback = () => {
     if (message === "" && rating === "") {
       Alert.alert("Enter details first");
@@ -16,9 +28,10 @@ const FeedbackScreen = ({ navigation }) => {
         .post(`https://livebusapi.herokuapp.com/api/student/feedbacks`, {
           message: message,
           rating: rating,
+          created_at: formatDate(Date.now()),
         })
         .then((response) => {
-          console.log(response.data);
+          // console.log(response.data);
           navigation.navigate("Home");
           Alert.alert("Your Feedback has been submitted!");
           setMessage("");
@@ -49,8 +62,9 @@ const FeedbackScreen = ({ navigation }) => {
       { cancelable: false }
     );
   };
-  console.log(message);
-  console.log(rating);
+
+  // console.log(message);
+  // console.log(rating);
   return (
     <View style={styles.container}>
       <View>

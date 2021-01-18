@@ -23,8 +23,6 @@ import firebaseConfig from "../firebase";
 import { Picker } from "@react-native-picker/picker";
 
 const HomeScreen = ({ navigation }) => {
-  // const {isBookRides} = route.params
-
   const { colors } = useTheme();
 
   const [dbRoutes, setDBRoutes] = useState([]);
@@ -37,6 +35,9 @@ const HomeScreen = ({ navigation }) => {
 
   const [bookedRide, setBookedRide] = useState({});
   const [isBookRide, setIsBookRide] = useState(false);
+
+  const [seats, setSeats] = useState("");
+
   const theme = useTheme();
 
   // get user from Async
@@ -68,6 +69,25 @@ const HomeScreen = ({ navigation }) => {
       })
       .catch((err) => alert("Network Down. Please try again"));
   }, []);
+
+  // Check seats
+  useEffect(() => {
+    // const checkSeats = async () => {
+    setTimeout(async () => {
+      const no = await firebase
+        .firestore()
+        .collection("Bus")
+        .doc(selectedRoute.busNo)
+        .get();
+      setSeats(no.data().seats);
+      if (!no.exists) {
+        console.log("No such document!");
+      } else {
+        console.log("No of seats======>:", no.data().seats);
+      }
+    }, 1000);
+    // };
+  }, [selectedRoute]);
 
   const registerForPushNotificationsAsync = async () => {
     let token;
@@ -123,55 +143,76 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const bookHandler = () => {
-    if (Object.keys(selectedRoute).length == 0 && selectedStop === "") {
+    if (Object.keys(selectedRoute).length == 0) {
       Alert.alert("Invalid details", "Select route and stop");
+    } else if (selectedStop === "") {
+      Alert.alert("Invalid details", "Select stop");
     } else {
-      axios
-        .post(`https://livebusapi.herokuapp.com/api/student/trips`, {
-          stdUsername: user.username,
-          email: user.email,
-          routeNo: selectedRoute.routeNo,
-          stopName: selectedStop,
-          date: formatDate(Date.now()),
-        })
-        .then((response) => {
-          Alert.alert(
-            "Alert Title",
-            "Are you sure?",
-            [
-              {
-                text: "Cancel",
-                onPress: () => console.log("Cancel Pressed"),
-                style: "cancel",
-              },
-              {
-                text: "Yes",
-                onPress: () => {
-                  setBookedRide(response.data);
-                  setIsBookRide(true);
-                  navigation.navigate("Explore", {
-                    isBookRide: isBookRide,
-                    setIsBookRide: setIsBookRide,
-                  });
-                  setSelectedRoute("");
-                  setSelectedStop("");
-                },
-              },
-            ],
-            { cancelable: false }
-          );
-        })
-        .catch((err) => {
-          Alert.alert("Invalid", "Server link down");
-        });
+      // checkSeats();
+      seats === 0
+        ? Alert.alert("Booking full", "Please select another one.")
+        : axios
+            .post(`https://livebusapi.herokuapp.com/api/student/trips`, {
+              stdUsername: user.username,
+              email: user.email,
+              routeNo: selectedRoute.routeNo,
+              stopName: selectedStop,
+              driver: selectedRoute.driver,
+              date: formatDate(Date.now()),
+            })
+            .then((response) => {
+              Alert.alert(
+                "Alert Title",
+                "Are you sure?",
+                [
+                  {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel",
+                  },
+                  {
+                    text: "Yes",
+                    onPress: () => {
+                      setBookedRide(response.data);
+                      setIsBookRide(true);
+                      updateSeats();
+                      navigation.navigate("Explore", {
+                        isBookRide: isBookRide,
+                        setIsBookRide: setIsBookRide,
+                        user: user,
+                        selectedRoute: selectedRoute,
+                        selectedStop: selectedStop,
+                      });
+                      setSelectedRoute("");
+                      setSelectedStop("");
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
+            })
+            .catch((err) => {
+              Alert.alert("Invalid", "Server link down");
+            });
     }
+  };
+
+  const updateSeats = async () => {
+    const s = seats - 1;
+    const no = await firebase
+      .firestore()
+      .collection("Bus")
+      .doc(selectedRoute.busNo)
+      .update({ seats: +s });
   };
 
   // console.log(dbRoutes)
   // console.log(stops)
-  console.log("Selected Routes here" + JSON.stringify(selectedRoute));
-  // console.log("Stops here"+ JSON.stringify(selectedStop))
-  // console.log(user)
+  console.log(
+    "HOME SCREEN ==> Selected Route here" + JSON.stringify(selectedRoute)
+  );
+  console.log("HOME SCREEN ==> Stops here" + JSON.stringify(selectedStop));
+  console.log("Seats of Home Screen ====>" + seats);
   return (
     <ScrollView style={styles.container}>
       <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
@@ -212,6 +253,7 @@ const HomeScreen = ({ navigation }) => {
           selectedValue={selectedRoute}
           onValueChange={(itemValue) => {
             setSelectedRoute(itemValue);
+            setSelectedStop("");
             setStops(itemValue.stops);
           }}
         >
@@ -231,7 +273,10 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={selectedStop}
-          onValueChange={(itemValue) => setSelectedStop(itemValue)}
+          onValueChange={(itemValue) => {
+            setSelectedStop(itemValue);
+            // checkSeats();
+          }}
         >
           <Picker.Item label="Select Stop" value="" />
           {stops.map((stop) => {

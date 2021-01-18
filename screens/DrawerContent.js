@@ -104,7 +104,9 @@ export function DrawerContent(props) {
               )}
               label="Trips"
               onPress={() => {
-                props.navigation.navigate("SettingsScreen");
+                props.navigation.navigate("SettingsScreen", {
+                  user: data,
+                });
               }}
             />
             <DrawerItem
