@@ -45,9 +45,7 @@ export function DrawerContent(props) {
           <View style={styles.userInfoSection}>
             <View style={{ flexDirection: "row", marginTop: 15 }}>
               <Avatar.Image
-                source={{
-                  uri: "https://api.adorable.io/avatars/50/abott@adorable.png",
-                }}
+                source={require("../assets/banners/stdLogo.png")}
                 size={50}
               />
               <View style={{ marginLeft: 15, flexDirection: "column" }}>

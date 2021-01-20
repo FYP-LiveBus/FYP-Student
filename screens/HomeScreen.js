@@ -22,6 +22,10 @@ import "firebase/firestore";
 import firebaseConfig from "../firebase";
 import { Picker } from "@react-native-picker/picker";
 
+import { LogBox } from "react-native";
+LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
+LogBox.ignoreAllLogs(); //Ignore all log notifications
+
 const HomeScreen = ({ navigation }) => {
   const { colors } = useTheme();
 
